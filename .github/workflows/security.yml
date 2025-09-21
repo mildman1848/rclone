@@ -142,7 +142,7 @@ jobs:
           sudo sh docker-bench-security.sh -c container_images
 
       - name: Upload Docker Bench results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: docker-bench-results
@@ -165,7 +165,7 @@ jobs:
           format: spdx-json
 
       - name: Upload SBOM
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: sbom
           path: ./*.spdx.json

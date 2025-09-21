@@ -148,7 +148,7 @@ jobs:
 
       - name: Upload digest
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: digests-${{ steps.platform_tags.outputs.platform_tag }}
           path: /tmp/digests/*
