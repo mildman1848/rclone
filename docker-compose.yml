@@ -1,0 +1,89 @@
+---
+services:
+  rclone:
+    image: ${IMAGE_NAME:-mildman1848/rclone}:${IMAGE_TAG:-latest}
+    container_name: rclone
+    hostname: rclone
+    restart: unless-stopped
+
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+
+    # Network configuration
+    ports:
+      - "${EXTERNAL_PORT:-5572}:5572"
+
+    # Environment configuration
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Etc/UTC}
+      - UMASK=${UMASK:-022}
+
+      # rclone specific environment variables
+      - RCLONE_MODE=${RCLONE_MODE:-rcd}
+      - RCLONE_CONFIG=/config/rclone/rclone.conf
+      - RCLONE_CACHE_DIR=/config/cache
+      - RCLONE_TEMP_DIR=/tmp/rclone
+      - RCLONE_LOG_LEVEL=${RCLONE_LOG_LEVEL:-INFO}
+      - RCLONE_LOG_FILE=/config/logs/rclone.log
+
+      # Optional: FILE__ prefix secrets support
+      - FILE__RCLONE_CONFIG_PASS=/run/secrets/rclone_config_pass
+      - FILE__RCLONE_PASSWORD
+      - FILE__RCLONE_PASSWORD2
+
+      # Web GUI configuration (for both rcd and serve modes)
+      - RCLONE_WEB_GUI=${RCLONE_WEB_GUI:-true}
+      - RCLONE_WEB_GUI_USERNAME=${RCLONE_WEB_GUI_USERNAME:-admin}
+      - FILE__RCLONE_WEB_GUI_PASSWORD=/run/secrets/rclone_web_gui_password
+
+    # Volume mounts
+    volumes:
+      - ${CONFIG_PATH:-./config}:/config
+      - ${DATA_PATH:-./data}:/data
+      - ${LOGS_PATH:-./logs}:/config/logs
+      # Mount additional paths as needed
+      - ${MEDIA_PATH:-./media}:/media
+      - ${BACKUP_PATH:-./backup}:/backup
+
+    # Optional: Docker secrets support
+    secrets:
+      - rclone_config_pass
+      - rclone_web_gui_password
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "rclone", "version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Labels for better organization
+    labels:
+      - "org.opencontainers.image.title=rclone"
+      - "org.opencontainers.image.description=rclone cloud storage manager"
+      - "org.opencontainers.image.vendor=Mildman1848"
+
+# Docker secrets (optional)
+secrets:
+  rclone_config_pass:
+    file: ${SECRETS_PATH:-./secrets}/rclone_config_pass.txt
+  rclone_web_gui_password:
+    file: ${SECRETS_PATH:-./secrets}/rclone_web_gui_password.txt
+
+# Networks (optional)
+networks:
+  default:
+    name: rclone_network
+    driver: bridge

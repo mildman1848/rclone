@@ -1,0 +1,131 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+echo "Starting rclone service..."
+
+# Process FILE__ environment variables if not already processed
+if [[ -n "${FILE__RCLONE_WEB_GUI_PASSWORD}" && -z "${RCLONE_WEB_GUI_PASSWORD}" ]]; then
+    if [[ -f "${FILE__RCLONE_WEB_GUI_PASSWORD}" && -r "${FILE__RCLONE_WEB_GUI_PASSWORD}" ]]; then
+        echo "Loading RCLONE_WEB_GUI_PASSWORD from ${FILE__RCLONE_WEB_GUI_PASSWORD}..."
+        RCLONE_WEB_GUI_PASSWORD="$(cat "${FILE__RCLONE_WEB_GUI_PASSWORD}")"
+        export RCLONE_WEB_GUI_PASSWORD
+        echo "✓ Set RCLONE_WEB_GUI_PASSWORD from secret file"
+    fi
+fi
+
+if [[ -n "${FILE__RCLONE_CONFIG_PASS}" && -z "${RCLONE_CONFIG_PASS}" ]]; then
+    if [[ -f "${FILE__RCLONE_CONFIG_PASS}" && -r "${FILE__RCLONE_CONFIG_PASS}" ]]; then
+        echo "Loading RCLONE_CONFIG_PASS from ${FILE__RCLONE_CONFIG_PASS}..."
+        RCLONE_CONFIG_PASS="$(cat "${FILE__RCLONE_CONFIG_PASS}")"
+        export RCLONE_CONFIG_PASS
+        echo "✓ Set RCLONE_CONFIG_PASS from secret file"
+    fi
+fi
+
+# Set default values with proper validation
+PORT=${PORT:-5572}
+CONFIG_PATH=${CONFIG_PATH:-/config}
+DATA_PATH=${DATA_PATH:-/data}
+HOST=${HOST:-0.0.0.0}
+RCLONE_CONFIG=${RCLONE_CONFIG:-${CONFIG_PATH}/rclone/rclone.conf}
+RCLONE_CACHE_DIR=${RCLONE_CACHE_DIR:-${CONFIG_PATH}/cache}
+RCLONE_LOG_LEVEL=${RCLONE_LOG_LEVEL:-INFO}
+RCLONE_LOG_FILE=${RCLONE_LOG_FILE:-${CONFIG_PATH}/logs/rclone.log}
+RCLONE_MODE=${RCLONE_MODE:-rcd}  # rcd (Web GUI) or serve (file server)
+RCLONE_SERVE_PROTOCOL=${RCLONE_SERVE_PROTOCOL:-http}
+RCLONE_WEB_GUI=${RCLONE_WEB_GUI:-true}
+RCLONE_WEB_GUI_USERNAME=${RCLONE_WEB_GUI_USERNAME:-admin}
+
+# Security: Validate paths and create directories
+for dir in "${CONFIG_PATH}" "${DATA_PATH}" "${CONFIG_PATH}/rclone" "${CONFIG_PATH}/cache" "${CONFIG_PATH}/logs"; do
+    if [[ ! -d "${dir}" ]]; then
+        echo "Creating directory: ${dir}"
+        mkdir -p "${dir}"
+    fi
+done
+
+# Create temp directory for rclone
+mkdir -p "${RCLONE_TEMP_DIR:-/tmp/rclone}"
+
+# Security: Ensure proper ownership with restricted permissions (safely)
+echo "Setting directory permissions..."
+chown -R abc:abc "${CONFIG_PATH}" "${DATA_PATH}" 2>/dev/null || true
+find "${CONFIG_PATH}" "${DATA_PATH}" -type d -exec chmod 750 {} \; 2>/dev/null || true
+find "${CONFIG_PATH}" "${DATA_PATH}" -type f -exec chmod 640 {} \; 2>/dev/null || true
+
+# Security: Validate port range
+if ! [[ "${PORT}" =~ ^[0-9]+$ ]] || [ "${PORT}" -lt 1 ] || [ "${PORT}" -gt 65535 ]; then
+    echo "ERROR: Invalid port number: ${PORT}"
+    exit 1
+fi
+
+# Initialize rclone config if it doesn't exist
+if [[ ! -f "${RCLONE_CONFIG}" ]]; then
+    echo "Creating initial rclone configuration..."
+    touch "${RCLONE_CONFIG}"
+    chown abc:abc "${RCLONE_CONFIG}"
+    chmod 600 "${RCLONE_CONFIG}"
+fi
+
+echo "Starting rclone in ${RCLONE_MODE} mode on ${HOST}:${PORT}..."
+echo "Config file: ${RCLONE_CONFIG}"
+echo "Data path: ${DATA_PATH}"
+echo "Cache directory: ${RCLONE_CACHE_DIR}"
+echo "Log level: ${RCLONE_LOG_LEVEL}"
+echo "Log file: ${RCLONE_LOG_FILE}"
+
+# Build rclone command arguments based on mode
+if [[ "${RCLONE_MODE}" == "rcd" ]]; then
+    # Remote Control Daemon mode (Web GUI)
+    echo "Starting rclone remote control daemon (Web GUI)..."
+    RCLONE_ARGS=(
+        "rcd"
+        "--rc-addr" "${HOST}:${PORT}"
+        "--rc-web-gui"
+        "--rc-web-gui-update"
+        "--log-level" "${RCLONE_LOG_LEVEL}"
+    )
+
+    # Add authentication for Web GUI (check for no-auth first)
+    if [[ "${RCLONE_RC_NO_AUTH}" == "true" ]]; then
+        RCLONE_ARGS+=("--rc-no-auth")
+        echo "Web GUI authentication disabled"
+    elif [[ -n "${RCLONE_WEB_GUI_USERNAME}" && -n "${RCLONE_WEB_GUI_PASSWORD}" ]]; then
+        RCLONE_ARGS+=("--rc-user" "${RCLONE_WEB_GUI_USERNAME}")
+        RCLONE_ARGS+=("--rc-pass" "${RCLONE_WEB_GUI_PASSWORD}")
+        echo "Web GUI authentication enabled for user: ${RCLONE_WEB_GUI_USERNAME}"
+    fi
+else
+    # Serve mode (file server)
+    echo "Starting rclone ${RCLONE_SERVE_PROTOCOL} server..."
+    RCLONE_ARGS=(
+        "serve"
+        "${RCLONE_SERVE_PROTOCOL}"
+        "${DATA_PATH}"
+        "--addr" "${HOST}:${PORT}"
+        "--log-level" "${RCLONE_LOG_LEVEL}"
+    )
+
+    # Add web GUI options for HTTP serve
+    if [[ "${RCLONE_SERVE_PROTOCOL}" == "http" && "${RCLONE_WEB_GUI}" == "true" ]]; then
+        if [[ -n "${RCLONE_WEB_GUI_USERNAME}" ]]; then
+            RCLONE_ARGS+=("--user" "${RCLONE_WEB_GUI_USERNAME}")
+        fi
+        if [[ -n "${RCLONE_WEB_GUI_PASSWORD}" ]]; then
+            RCLONE_ARGS+=("--pass" "${RCLONE_WEB_GUI_PASSWORD}")
+        fi
+    fi
+fi
+
+# Add log file if specified
+if [[ -n "${RCLONE_LOG_FILE}" ]]; then
+    RCLONE_ARGS+=("--log-file" "${RCLONE_LOG_FILE}")
+fi
+
+# Add custom arguments if provided
+if [[ -n "${RCLONE_SERVE_ARGS}" ]]; then
+    eval "RCLONE_ARGS+=(${RCLONE_SERVE_ARGS})"
+fi
+
+# Security: Run as non-root user with limited capabilities
+exec s6-setuidgid abc rclone "${RCLONE_ARGS[@]}"

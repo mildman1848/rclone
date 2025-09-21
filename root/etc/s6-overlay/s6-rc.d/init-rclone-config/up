@@ -1,0 +1,102 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+echo "Initializing rclone configuration..."
+
+# Apply UMASK for file creation (LinuxServer.io standard)
+UMASK=${UMASK:-022}
+umask "$UMASK"
+echo "Applied UMASK: $UMASK"
+
+# Create necessary directories with proper permissions
+echo "Creating directory structure..."
+mkdir -p /config /data /config/rclone /config/cache /config/logs
+
+# Apply LinuxServer.io standard ownership and permissions (safely)
+echo "Setting ownership and permissions..."
+# Only change ownership if we have permission, otherwise skip silently
+chown -R abc:abc /config /data 2>/dev/null || true
+# Only change permissions on directories we can modify
+find /config /data -type d -exec chmod 750 {} \; 2>/dev/null || true
+find /config /data -type f -exec chmod 640 {} \; 2>/dev/null || true
+
+# Create additional mount directories if they don't exist
+for dir in /media /backup; do
+    if [[ ! -d "$dir" ]]; then
+        mkdir -p "$dir"
+        chown abc:abc "$dir" 2>/dev/null || true
+        chmod 755 "$dir" 2>/dev/null || true
+    fi
+done
+
+# Set rclone-specific directories
+RCLONE_CONFIG_DIR="/config/rclone"
+RCLONE_CONFIG_FILE="${RCLONE_CONFIG_DIR}/rclone.conf"
+RCLONE_CACHE_DIR="/config/cache"
+RCLONE_LOG_DIR="/config/logs"
+
+# Create rclone config directory and file if they don't exist
+if [[ ! -d "${RCLONE_CONFIG_DIR}" ]]; then
+    mkdir -p "${RCLONE_CONFIG_DIR}"
+    chown abc:abc "${RCLONE_CONFIG_DIR}" 2>/dev/null || true
+    chmod 750 "${RCLONE_CONFIG_DIR}" 2>/dev/null || true
+fi
+
+if [[ ! -f "${RCLONE_CONFIG_FILE}" ]]; then
+    echo "Creating initial rclone configuration file..."
+    touch "${RCLONE_CONFIG_FILE}"
+    chown abc:abc "${RCLONE_CONFIG_FILE}" 2>/dev/null || true
+    chmod 600 "${RCLONE_CONFIG_FILE}" 2>/dev/null || true
+    echo "# rclone configuration file" > "${RCLONE_CONFIG_FILE}"
+    echo "# Use 'rclone config' to add remotes" >> "${RCLONE_CONFIG_FILE}"
+fi
+
+# Create cache directory
+if [[ ! -d "${RCLONE_CACHE_DIR}" ]]; then
+    mkdir -p "${RCLONE_CACHE_DIR}"
+    chown abc:abc "${RCLONE_CACHE_DIR}" 2>/dev/null || true
+    chmod 750 "${RCLONE_CACHE_DIR}" 2>/dev/null || true
+fi
+
+# Create log directory
+if [[ ! -d "${RCLONE_LOG_DIR}" ]]; then
+    mkdir -p "${RCLONE_LOG_DIR}"
+    chown abc:abc "${RCLONE_LOG_DIR}" 2>/dev/null || true
+    chmod 750 "${RCLONE_LOG_DIR}" 2>/dev/null || true
+fi
+
+# Create temp directory for rclone operations
+RCLONE_TEMP_DIR="/tmp/rclone"
+if [[ ! -d "${RCLONE_TEMP_DIR}" ]]; then
+    mkdir -p "${RCLONE_TEMP_DIR}"
+    chown abc:abc "${RCLONE_TEMP_DIR}" 2>/dev/null || true
+    chmod 755 "${RCLONE_TEMP_DIR}" 2>/dev/null || true
+fi
+
+# Validate rclone installation
+echo "Validating rclone installation..."
+if command -v rclone >/dev/null 2>&1; then
+    RCLONE_VERSION=$(rclone version 2>/dev/null | head -n1 | cut -d' ' -f2 || echo "unknown")
+    echo "✓ rclone version: ${RCLONE_VERSION}"
+
+    # Test rclone config access
+    if rclone config file >/dev/null 2>&1; then
+        echo "✓ rclone configuration access verified"
+    else
+        echo "⚠ Warning: rclone configuration access issue"
+    fi
+else
+    echo "✗ Error: rclone binary not found"
+    exit 1
+fi
+
+# Set environment variables for rclone
+export RCLONE_CONFIG="${RCLONE_CONFIG_FILE}"
+export RCLONE_CACHE_DIR="${RCLONE_CACHE_DIR}"
+export RCLONE_TEMP_DIR="${RCLONE_TEMP_DIR}"
+
+echo "✓ rclone configuration initialized successfully."
+echo "  Config file: ${RCLONE_CONFIG_FILE}"
+echo "  Cache directory: ${RCLONE_CACHE_DIR}"
+echo "  Temp directory: ${RCLONE_TEMP_DIR}"
+echo "  Log directory: ${RCLONE_LOG_DIR}"

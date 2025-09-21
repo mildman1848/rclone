@@ -1,0 +1,147 @@
+# Production Docker Compose Configuration
+# Use this for production deployments with maximum security
+
+version: '3.8'
+
+services:
+  rclone:
+    image: mildman1848/rclone:latest
+    container_name: rclone-production
+    hostname: rclone-prod
+
+    # Production Security Hardening
+    security_opt:
+      - no-new-privileges:true
+      - apparmor:docker-default
+      - seccomp:./seccomp-profile.json  # Custom seccomp profile
+
+    # Strict Capability Management
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+
+    # Production Resource Limits
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 2G
+          pids: 100
+        reservations:
+          cpus: '1.0'
+          memory: 512M
+
+    # Network Configuration
+    ports:
+      - "127.0.0.1:5572:5572"  # Bind only to localhost for security
+    networks:
+      - rclone_production
+
+    # Production Environment
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-UTC}
+
+      # rclone Configuration
+      - RCLONE_MODE=rcd
+      - RCLONE_CONFIG=/config/rclone/rclone.conf
+      - RCLONE_CACHE_DIR=/config/cache
+      - RCLONE_LOG_LEVEL=INFO
+      - RCLONE_LOG_FILE=/config/logs/rclone.log
+
+      # Security Settings
+      - UMASK=027
+      - CORE_DUMP_SIZE=0
+      - AUDIT_LOG=true
+
+      # Authentication (use FILE__ secrets in production)
+      - RCLONE_RC_WEB_GUI=true
+      - RCLONE_RC_WEB_GUI_UPDATE=false  # Disable updates in production
+      - FILE__RCLONE_RC_USER=/run/secrets/rclone_user
+      - FILE__RCLONE_RC_PASS=/run/secrets/rclone_pass
+
+    # Production Volumes (read-only where possible)
+    volumes:
+      - type: bind
+        source: ${HOST_CONFIG_PATH:-./config}
+        target: /config
+        bind:
+          propagation: rprivate
+
+      - type: bind
+        source: ${HOST_DATA_PATH:-./data}
+        target: /data
+        read_only: false  # rclone needs write access for cache operations
+        bind:
+          propagation: rprivate
+
+      # Temporary files in memory
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 200M
+          mode: 1777
+
+      - type: tmpfs
+        target: /var/tmp
+        tmpfs:
+          size: 100M
+          mode: 1777
+
+    # Production Secrets
+    secrets:
+      - rclone_user
+      - rclone_pass
+      - rclone_config_pass
+
+    # Enhanced Health Check
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ps aux | grep -v grep | grep rclone && curl -f http://localhost:5572/core/version >/dev/null 2>&1 || exit 1"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+
+    # Production Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        labels: "production,rclone,security"
+
+    # Restart Policy
+    restart: unless-stopped
+
+    # DNS Configuration
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+# Production Network
+networks:
+  rclone_production:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: rclone_prod_br
+      com.docker.network.bridge.enable_icc: "false"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+          gateway: 172.21.0.1
+
+# Production Secrets
+secrets:
+  rclone_user:
+    file: ./secrets/rclone_user.txt
+  rclone_pass:
+    file: ./secrets/rclone_pass.txt
+  rclone_config_pass:
+    file: ./secrets/rclone_config_pass.txt

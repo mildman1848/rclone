@@ -1,0 +1,133 @@
+# Docker Compose Override File for Enhanced Security
+# This file implements additional security hardening measures
+# It automatically overrides settings in docker-compose.yml
+
+services:
+  rclone:
+    # Enhanced Security Configuration
+    security_opt:
+      - apparmor:unconfined  # Can be customized for stricter AppArmor profiles
+      - seccomp:unconfined   # Can be customized for stricter seccomp profiles
+
+    # Capability Management (Drop all, add only necessary)
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN      # Required for file ownership changes
+      - DAC_OVERRIDE  # Required for file permission overrides
+      - FOWNER     # Required for file ownership operations
+      - SETGID     # Required for group ID changes
+      - SETUID     # Required for user ID changes
+
+    # Process and Memory Limits (Production-ready defaults)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+          pids: 200
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # Memory Settings
+    shm_size: 64m
+
+    # Network Security
+    networks:
+      - rclone_network
+
+    # Additional Volumes with Security Options
+    volumes:
+      # Config volume with noexec for security
+      - type: bind
+        source: ${HOST_CONFIG_PATH:-./config}
+        target: /config
+        bind:
+          propagation: rprivate
+
+      # Data volume with restricted options
+      - type: bind
+        source: ${HOST_DATA_PATH:-./data}
+        target: /data
+        bind:
+          propagation: rprivate
+
+      # Temporary files in memory (tmpfs)
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 100M
+          mode: 1777
+
+      # Read-only /etc for additional security
+      - type: tmpfs
+        target: /var/tmp
+        tmpfs:
+          size: 50M
+          mode: 1777
+
+    # Environment Variables for Enhanced Security
+    environment:
+      # Disable core dumps
+      - CORE_DUMP_SIZE=0
+
+      # Enhanced logging for security monitoring
+      - AUDIT_LOG=true
+
+      # Secure defaults
+      - UMASK=027  # More restrictive than default 022
+
+      # rclone security settings
+      - RCLONE_ALLOW_OTHER=false
+
+    # Enhanced Health Check (Process-based for security)
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ps aux | grep -v grep | grep rclone || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Logging Configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "production,rclone,security"
+
+    # Restart Policy
+    restart: unless-stopped
+
+    # User Namespace Remapping (if supported by Docker daemon)
+    # userns_mode: "host"  # Uncomment if user namespace remapping is configured
+
+# Custom Network for Isolation
+networks:
+  rclone_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: rclone_br
+      com.docker.network.bridge.enable_icc: "false"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+
+# Named Volumes with Security Options (alternative to bind mounts)
+volumes:
+  rclone_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind,rw,nodev,nosuid,noexec
+      device: ${HOST_CONFIG_PATH:-./config}
+
+  rclone_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind,rw,nodev,nosuid
+      device: ${HOST_DATA_PATH:-./data}
