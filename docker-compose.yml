@@ -20,7 +20,7 @@ services:
 
     # Network configuration
     ports:
-      - "${EXTERNAL_PORT:-5572}:5572"
+      - "${HOST:-127.0.0.1}:${EXTERNAL_PORT:-5572}:5572"
 
     # Environment configuration
     environment:
@@ -36,6 +36,7 @@ services:
       - RCLONE_TEMP_DIR=/tmp/rclone
       - RCLONE_LOG_LEVEL=${RCLONE_LOG_LEVEL:-INFO}
       - RCLONE_LOG_FILE=/config/logs/rclone.log
+      - RCLONE_RC_NO_AUTH=${RCLONE_RC_NO_AUTH:-false}
 
       # Optional: FILE__ prefix secrets support
       - FILE__RCLONE_CONFIG_PASS=/run/secrets/rclone_config_pass
