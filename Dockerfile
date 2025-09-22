@@ -57,7 +57,7 @@ COPY root/ /
 
 # Security: Set non-root user (LinuxServer.io will manage actual user via S6)
 # This satisfies security scanners while S6 overlay handles the real user management
-USER abc
+# USER abc
 
 # Expose ports (rclone serve ports)
 EXPOSE 5572
