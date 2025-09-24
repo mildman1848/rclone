@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.71.1-2] - 2025-09-24
+
+### 🚀 Version Update & Management
+- **rclone Update**: Upgraded from 1.71.0 to 1.71.1 (latest upstream release)
+- **Version Validation**: Added mandatory upstream version checking with GitHub API
+- **Build Integration**: version-check target enforced before builds
+- **Synchronization**: Maintained alignment with upstream rclone/rclone releases
+
+### 📚 Documentation Organization
+- **docs/ Structure**: Moved LINUXSERVER.md files from root to docs/ directory
+- **Standards Compliance**: Aligned with workspace documentation standards
+- **Consistency**: Maintained bilingual documentation (English/German)
+
+### 🔒 Security Validation
+- **Clean Scan**: Zero vulnerabilities detected in comprehensive security assessment
+- **Alpine Base**: LinuxServer.io Alpine 3.22.1 security validated
+- **Go Binary**: rclone binary security verified
+- **Production Ready**: Security posture optimized
+
 ### 📝 File Management Standardization (2025-09-23)
 
 #### .gitignore and .dockerignore Updates
