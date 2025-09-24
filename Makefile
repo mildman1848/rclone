@@ -6,7 +6,8 @@ DOCKER_REPO = mildman1848/rclone
 VERSION ?= latest
 BUILD_DATE := $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 VCS_REF := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-RCLONE_VERSION ?= 1.71.0
+RCLONE_VERSION ?= 1.71.1
+UPSTREAM_REPO = rclone/rclone
 
 # Platform support for multi-architecture builds
 PLATFORMS = linux/amd64,linux/arm64
@@ -41,8 +42,26 @@ help: ## Show this help message
 	@echo "  $(YELLOW)RCLONE_VERSION$(NC)        rclone version (default: $(RCLONE_VERSION))"
 	@echo "  $(YELLOW)PLATFORMS$(NC)             Target platforms (default: $(PLATFORMS))"
 
+## Version Management
+version-check: ## Check if current version is up to date with upstream
+	@echo "$(BLUE)Checking upstream version...$(NC)"
+	@LATEST=$$(curl -s https://api.github.com/repos/$(UPSTREAM_REPO)/releases/latest | grep -o '"tag_name": *"[^"]*"' | sed 's/"tag_name": *"//;s/"//' 2>/dev/null || echo "unknown"); \
+	LATEST_CLEAN=$$(echo "$$LATEST" | sed 's/^v//'); \
+	if [ "$$LATEST" = "unknown" ]; then \
+		echo "$(YELLOW)⚠️  Unable to fetch latest version from GitHub API$(NC)"; \
+		echo "$(YELLOW)Current version: $(RCLONE_VERSION)$(NC)"; \
+		echo "$(YELLOW)Please check https://github.com/$(UPSTREAM_REPO)/releases manually$(NC)"; \
+	elif [ "$$LATEST_CLEAN" != "$(RCLONE_VERSION)" ]; then \
+		echo "$(RED)⚠️  OUTDATED: Using $(RCLONE_VERSION), latest is $$LATEST_CLEAN$(NC)"; \
+		echo "$(YELLOW)Consider updating RCLONE_VERSION in Makefile and Dockerfile$(NC)"; \
+		echo "$(YELLOW)Update command: sed -i 's/$(RCLONE_VERSION)/'$$LATEST_CLEAN'/g' Makefile Dockerfile$(NC)"; \
+		echo "$(BLUE)Release info: https://github.com/$(UPSTREAM_REPO)/releases/tag/$$LATEST$(NC)"; \
+	else \
+		echo "$(GREEN)✅ Using latest version: $(RCLONE_VERSION)$(NC)"; \
+	fi
+
 ## Build targets
-build: ## Build Docker image for current platform
+build: version-check ## Build Docker image for current platform (with version check)
 	@echo "$(GREEN)Building Docker image...$(NC)"
 	$(DOCKER) build \
 		--build-arg BUILD_DATE="$(BUILD_DATE)" \
