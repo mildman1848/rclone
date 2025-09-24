@@ -18,6 +18,7 @@ services:
       - FOWNER     # Required for file ownership operations
       - SETGID     # Required for group ID changes
       - SETUID     # Required for user ID changes
+      - SYS_ADMIN  # Required for FUSE mounting (SMB support)
 
     # Process and Memory Limits (Production-ready defaults)
     deploy:
@@ -53,6 +54,13 @@ services:
         bind:
           propagation: rprivate
 
+      # Mount point for future remote storage - accessible from host
+      - type: bind
+        source: ${HOST_MOUNT_PATH:-./data/mnt}
+        target: /mnt
+        bind:
+          propagation: rshared
+
       # Temporary files in memory (tmpfs)
       - type: tmpfs
         target: /tmp
@@ -67,6 +75,10 @@ services:
           size: 50M
           mode: 1777
 
+    # Device access for FUSE mounting
+    devices:
+      - "/dev/fuse:/dev/fuse"
+
     # Environment Variables for Enhanced Security
     environment:
       # Disable core dumps
@@ -80,6 +92,11 @@ services:
 
       # rclone security settings
       - RCLONE_ALLOW_OTHER=false
+
+      # rclone operational configuration
+      - RCLONE_MODE=rcd  # Remote Control Daemon for Web GUI
+      - RCLONE_LOG_LEVEL=INFO
+      - RCLONE_LOG_FILE=/config/logs/rclone.log
 
     # Enhanced Health Check (Process-based for security)
     healthcheck:

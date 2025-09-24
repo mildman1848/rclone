@@ -16,9 +16,13 @@
 
   Based on LinuxServer.io Alpine + S6 Overlay v3
   Licensed under MIT License
+
+  Original Project: https://github.com/rclone/rclone
+  Original License: MIT License
+  Original Docs: https://rclone.org/docs/
 ══════════════════════════════════════════════════════════════════════════════════════════
 
-To support LSIO projects visit:
-https://www.linuxserver.io/donate/
+To support the original rclone project:
+https://rclone.org/donate/
 
 ══════════════════════════════════════════════════════════════════════════════════════════

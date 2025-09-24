@@ -15,6 +15,10 @@ secrets/backup-*/
 config/
 data/
 logs/
+security/
+security-reports/
+
+# Application-specific runtime directories
 media/
 backup/
 rclone-cache/
@@ -116,4 +120,5 @@ security-scan.*
 audit-*.json
 cve-*.json
 
-UPSTREAM_AUTOMATION_EVALUATION.md
+# Removed obsolete files
+# UPSTREAM_AUTOMATION_EVALUATION.md

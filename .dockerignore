@@ -67,6 +67,11 @@ docker-compose.override.yml
 # Data directories (runtime volumes)
 config/
 data/
+logs/
+security/
+security-reports/
+
+# Application-specific runtime directories
 rclone-cache/
 rclone-logs/
 

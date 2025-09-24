@@ -13,7 +13,7 @@ services:
     security_opt:
       - no-new-privileges:true
       - apparmor:docker-default
-      - seccomp:./seccomp-profile.json  # Custom seccomp profile
+      - seccomp:./security/seccomp-profile.json  # Custom seccomp profile
 
     # Strict Capability Management
     cap_drop:
