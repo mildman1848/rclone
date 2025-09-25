@@ -4,7 +4,7 @@
 FROM rclone/rclone:1.71.1 AS rclone
 
 # Production stage with LinuxServer.io Alpine baseimage
-FROM ghcr.io/linuxserver/baseimage-alpine:3.22-25712cc1-ls9
+FROM ghcr.io/linuxserver/baseimage-alpine:3.22-02acf855-ls10
 
 # Build arguments for metadata
 ARG BUILD_DATE
