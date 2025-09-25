@@ -120,5 +120,10 @@ security-scan.*
 audit-*.json
 cve-*.json
 
+# Baseimage testing (2025-09-25)
+BASEIMAGE_UPDATE_REPORT.md
+baseimage-test-*.log
+baseimage-test-*.json
+
 # Removed obsolete files
 # UPSTREAM_AUTOMATION_EVALUATION.md

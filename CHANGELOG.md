@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.71.1-3] - 2025-09-25
+
+### 🔧 Build & Infrastructure Updates
+- **Baseimage Testing**: Added comprehensive baseimage update testing system with Make targets
+- **Infrastructure**: Confirmed all baseimages and upstream versions are current (no updates needed)
+
+### 📝 File Management
+- **gitignore**: Added baseimage testing files (BASEIMAGE_UPDATE_REPORT.md, baseimage-test-*.log, baseimage-test-*.json)
+- **Security**: Enhanced ignored patterns for security scan results and testing artifacts
+
+### 🛠️ Make Command Extensions
+- `make baseimage-check`: Check for LinuxServer.io baseimage updates
+- `make baseimage-test`: Test new LinuxServer.io baseimage version
+- `make baseimage-update`: Update to latest LinuxServer.io baseimage
+
+### ✅ Validation Status
+- **Upstream Version**: v1.71.1 confirmed as current (no update needed)
+- **Base Image**: 3.22-02acf855-ls10 confirmed as latest
+- **CI/CD Pipeline**: All workflows passing successfully
+
 ## [1.71.1-2] - 2025-09-24
 
 ### 🚀 Version Update & Management
