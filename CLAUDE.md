@@ -10,7 +10,7 @@ This is a custom Docker image for **rclone** based on the LinuxServer.io Alpine 
 
 **Key Technologies:**
 - **Base:** LinuxServer.io Alpine 3.22 with S6 Overlay v3
-- **Application:** rclone v1.71.0 with Web GUI (Remote Control Daemon)
+- **Application:** rclone v1.71.1 with Web GUI (Remote Control Daemon)
 - **Default Port:** 5572 (official rclone Web GUI port)
 - **Modes:** rcd (Web GUI) and serve (file server) modes supported
 - **Architecture:** OCI Manifest Lists with native multi-platform support (AMD64, ARM64)
@@ -86,6 +86,11 @@ make env-validate           # Validate .env configuration (enhanced checks)
 make secrets-info           # Show current secrets status with details
 make secrets-rotate         # Rotate secrets (with backup and stronger encryption)
 make secrets-clean          # Clean up old secret backups
+
+# LinuxServer.io Baseimage Management (2025-09-25)
+make baseimage-check        # Check for LinuxServer.io baseimage updates
+make baseimage-test         # Test new LinuxServer.io baseimage version
+make baseimage-update       # Update to latest LinuxServer.io baseimage
 ```
 
 ### Docker Compose Operations
