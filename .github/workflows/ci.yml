@@ -32,11 +32,9 @@ jobs:
 
       - name: Validate docker-compose.yml
         run: |
-          # Install docker-compose
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-          docker-compose config -q
+          # Use docker compose (plugin version) - available by default in Ubuntu runners
+          docker compose --version
+          docker compose config -q
 
       - name: Check Makefile syntax
         run: |
@@ -263,12 +261,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Install docker-compose
+      - name: Check docker compose
         run: |
-          # Install docker-compose
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
+          # Use docker compose (plugin version) - available by default in Ubuntu runners
+          docker compose --version
 
       - name: Create test environment
         run: |
@@ -304,10 +300,10 @@ jobs:
         run: |
           docker build -t mildman1848/rclone:test .
 
-      - name: Test docker-compose up
+      - name: Test docker compose up
         run: |
           # The IMAGE_TAG=test is already set in .env file
-          docker-compose up -d rclone
+          docker compose up -d rclone
 
       - name: Wait and test service
         run: |
@@ -317,16 +313,16 @@ jobs:
 
           # Check container status first
           echo "=== Container status ==="
-          docker-compose ps
+          docker compose ps
 
           # Check container logs early to debug issues
           echo "=== Container logs ==="
-          docker-compose logs rclone
+          docker compose logs rclone
 
           # Wait for container to be healthy (more robust approach)
           echo "Waiting for container to be ready..."
           for i in {1..30}; do
-            if docker-compose ps rclone | grep -q "Up"; then
+            if docker compose ps rclone | grep -q "Up"; then
               echo "Container is running, checking health..."
               break
             fi
@@ -336,8 +332,8 @@ jobs:
 
           # Test if rclone process is running (only if container is up)
           echo "=== Checking rclone process ==="
-          if docker-compose ps rclone | grep -q "Up"; then
-            docker-compose exec -T rclone ps aux | grep -v grep | grep rclone || echo "rclone process not found yet"
+          if docker compose ps rclone | grep -q "Up"; then
+            docker compose exec -T rclone ps aux | grep -v grep | grep rclone || echo "rclone process not found yet"
           else
             echo "Container is not running - skipping process check"
           fi
@@ -360,9 +356,9 @@ jobs:
         if: always()
         run: |
           echo "=== Docker Compose logs ==="
-          docker-compose logs
+          docker compose logs
 
       - name: Cleanup
         if: always()
         run: |
-          docker-compose down -v
+          docker compose down -v
