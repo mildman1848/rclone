@@ -270,7 +270,7 @@ jobs:
         run: |
           # Create test directories for docker-compose
           mkdir -p config/{rclone,cache,logs}
-          mkdir -p data media backup logs
+          mkdir -p data media backup logs data/mnt
           chmod 755 config data media backup logs
 
           # Copy .env.example to .env for testing
