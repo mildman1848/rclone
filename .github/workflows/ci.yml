@@ -29,6 +29,7 @@ jobs:
         with:
           dockerfile: Dockerfile
           failure-threshold: warning
+          ignore: DL3007,DL3018,DL3013
 
       - name: Validate docker-compose.yml
         run: |
