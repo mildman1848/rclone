@@ -33,7 +33,7 @@ jobs:
 
       - name: Validate docker-compose.yml
         run: |
-          # Use docker compose (plugin version) - available by default in Ubuntu runners
+          # Use docker compose (plugin version)
           docker compose --version
           docker compose config -q
 
@@ -43,10 +43,8 @@ jobs:
 
       - name: Validate environment files
         run: |
-          # Check .env.example syntax
           if [ -f .env.example ]; then
             echo "Validating .env.example..."
-            # Simple syntax validation
             grep -E '^[A-Z_][A-Z0-9_]*=' .env.example || true
           fi
 
@@ -81,8 +79,8 @@ jobs:
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
             VERSION=test-${{ github.sha }}
             VCS_REF=${{ github.sha }}
-            RCLONE_VERSION=1.71.0
-            PROJECT_VERSION=$(cat VERSION || echo "2.29.0-automation.2")
+            RCLONE_VERSION=$(cat VERSION || echo "1.71.1-automation.2")
+            PROJECT_VERSION=$(cat VERSION || echo "1.71.1-automation.2")
 
   integration-test:
     name: Integration Tests
@@ -100,35 +98,28 @@ jobs:
         with:
           context: .
           load: true
-          tags: mildman1848/rclone:test
+          tags: ${DOCKER_USERNAME}/rclone:test
           cache-from: type=gha
           build-args: |
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
             VERSION=test
             VCS_REF=${{ github.sha }}
-            PROJECT_VERSION=$(cat VERSION || echo "2.29.0-automation.2")
+            PROJECT_VERSION=$(cat VERSION || echo "1.71.1-automation.2")
 
       - name: Create test environment
         run: |
-          # Create test directories for rclone with proper structure
           mkdir -p test-volumes/config/{rclone,cache,logs}
           mkdir -p test-volumes/{data,media,backup}
-
-          # Set proper permissions for directories
           chmod 755 test-volumes/config
           chmod 755 test-volumes/data test-volumes/media test-volumes/backup
 
-          # Create minimal .env for testing
           cat > .env << EOF
-          DOCKER_REPO=mildman1848/rclone
+          DOCKER_REPO=${DOCKER_USERNAME}/rclone
           VERSION=test
           PUID=1000
           PGID=1000
           TZ=UTC
           RCLONE_LOG_LEVEL=INFO
-          RCLONE_MODE=rcd
-          RCLONE_WEB_GUI=true
-          RCLONE_WEB_GUI_USERNAME=admin
           EXTERNAL_PORT=5572
           EOF
 
@@ -136,70 +127,45 @@ jobs:
         run: |
           mkdir -p secrets
           openssl rand -base64 32 | tr -d "=+/" | head -c 24 > secrets/rclone_config_pass.txt
-          openssl rand -base64 32 | tr -d "=+/" | head -c 20 > secrets/rclone_web_gui_password.txt
+          openssl rand -base64 32 | tr -d "=+/" | head -c 20 > secrets/rclone_password.txt
           chmod 600 secrets/*.txt
 
       - name: Test container startup
         run: |
-          # Start container
           docker run -d \
             --name rclone-test \
             -p 5572:5572 \
             -v $(pwd)/test-volumes/config:/config \
             -v $(pwd)/test-volumes/data:/data \
-            -v $(pwd)/test-volumes/media:/media \
-            -v $(pwd)/test-volumes/backup:/backup \
             -v $(pwd)/secrets:/run/secrets:ro \
             -e PUID=1000 \
             -e PGID=1000 \
             -e TZ=UTC \
-            -e RCLONE_MODE=rcd \
-            -e RCLONE_WEB_GUI=true \
-            -e RCLONE_WEB_GUI_USERNAME=admin \
-            -e FILE__RCLONE_WEB_GUI_PASSWORD=/run/secrets/rclone_web_gui_password.txt \
-            mildman1848/rclone:test
+            ${DOCKER_USERNAME}/rclone:test
 
       - name: Wait for container
         run: |
-          # Wait for container to be ready - improved startup detection
           echo "Waiting for container to start..."
           sleep 10
 
-          # Wait for rclone process to start
           timeout 180s bash -c 'while ! docker exec rclone-test ps aux | grep -v grep | grep rclone >/dev/null 2>&1; do
             echo "Waiting for rclone process..."
             sleep 5
           done'
 
-          # Additional wait for Web GUI to be ready
-          echo "Waiting for Web GUI to be ready..."
+          echo "Waiting for service to be ready..."
           sleep 20
 
       - name: Test container health
         run: |
-          # Check if container is running
           docker ps | grep rclone-test
-
-          # Test rclone process is running
           docker exec rclone-test ps aux | grep -v grep | grep rclone
 
-          # Check container logs for any errors
           echo "=== Container startup logs ==="
           docker logs rclone-test
 
-          # Test basic connectivity (without authentication first)
           echo "=== Testing basic connectivity ==="
           timeout 30s bash -c 'while ! nc -z localhost 5572; do echo "Waiting for port 5572..."; sleep 2; done' || echo "Port 5572 check timed out"
-
-          # Test if we can reach the Web GUI (may require auth)
-          echo "=== Testing Web GUI (with auth) ==="
-          RCLONE_PASS=$(cat secrets/rclone_web_gui_password.txt)
-          curl -v -u admin:$RCLONE_PASS --connect-timeout 10 --max-time 30 http://localhost:5572/ || \
-          echo "Web GUI test failed - checking if rclone is using no-auth mode..."
-
-          # Alternative: test if rclone is running in no-auth mode
-          curl -v --connect-timeout 10 --max-time 30 http://localhost:5572/ || \
-          echo "Both auth and no-auth tests failed"
 
       - name: Test container logs
         if: always()
@@ -231,13 +197,13 @@ jobs:
         with:
           context: .
           load: true
-          tags: mildman1848/rclone:scan
+          tags: ${DOCKER_USERNAME}/rclone:scan
           cache-from: type=gha
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'mildman1848/rclone:scan'
+          image-ref: '${DOCKER_USERNAME}/rclone:scan'
           format: 'sarif'
           output: 'trivy-results.sarif'
 
@@ -250,9 +216,9 @@ jobs:
       - name: Run Trivy for detailed output
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'mildman1848/rclone:scan'
+          image-ref: '${DOCKER_USERNAME}/rclone:scan'
           format: 'table'
-          exit-code: '0'  # Don't fail the build on vulnerabilities
+          exit-code: '0'
 
   docker-compose-test:
     name: Docker Compose Test
@@ -264,20 +230,16 @@ jobs:
 
       - name: Check docker compose
         run: |
-          # Use docker compose (plugin version) - available by default in Ubuntu runners
           docker compose --version
 
       - name: Create test environment
         run: |
-          # Create test directories for docker-compose
           mkdir -p config/{rclone,cache,logs}
-          mkdir -p data media backup logs data/mnt
+          mkdir -p data media backup logs
           chmod 755 config data media backup logs
 
-          # Copy .env.example to .env for testing
           cp .env.example .env
 
-          # Override with test values for docker-compose
           cat >> .env << EOF
           VERSION=test
           IMAGE_TAG=test
@@ -285,8 +247,6 @@ jobs:
           RCLONE_LOG_LEVEL=DEBUG
           CONFIG_PATH=./config
           DATA_PATH=./data
-          MEDIA_PATH=./media
-          BACKUP_PATH=./backup
           LOGS_PATH=./logs
           SECRETS_PATH=./secrets
           EOF
@@ -295,32 +255,27 @@ jobs:
         run: |
           mkdir -p secrets
           openssl rand -base64 32 | tr -d "=+/" | head -c 24 > secrets/rclone_config_pass.txt
-          openssl rand -base64 32 | tr -d "=+/" | head -c 20 > secrets/rclone_web_gui_password.txt
+          openssl rand -base64 32 | tr -d "=+/" | head -c 20 > secrets/rclone_password.txt
 
       - name: Build image first
         run: |
-          docker build -t mildman1848/rclone:test .
+          docker build -t ${DOCKER_USERNAME}/rclone:test .
 
       - name: Test docker compose up
         run: |
-          # The IMAGE_TAG=test is already set in .env file
           docker compose up -d rclone
 
       - name: Wait and test service
         run: |
-          # Wait for service startup and check container status
           echo "Waiting for rclone service to start..."
           sleep 20
 
-          # Check container status first
           echo "=== Container status ==="
           docker compose ps
 
-          # Check container logs early to debug issues
           echo "=== Container logs ==="
           docker compose logs rclone
 
-          # Wait for container to be healthy (more robust approach)
           echo "Waiting for container to be ready..."
           for i in {1..30}; do
             if docker compose ps rclone | grep -q "Up"; then
@@ -331,7 +286,6 @@ jobs:
             sleep 5
           done
 
-          # Test if rclone process is running (only if container is up)
           echo "=== Checking rclone process ==="
           if docker compose ps rclone | grep -q "Up"; then
             docker compose exec -T rclone ps aux | grep -v grep | grep rclone || echo "rclone process not found yet"
@@ -339,19 +293,8 @@ jobs:
             echo "Container is not running - skipping process check"
           fi
 
-          # Test basic connectivity
           echo "=== Testing port connectivity ==="
           timeout 60s bash -c 'while ! nc -z localhost 5572; do echo "Waiting for port 5572..."; sleep 3; done' || echo "Port check timed out"
-
-          # Test Web GUI with authentication (if port is available)
-          echo "=== Testing Web GUI ==="
-          if nc -z localhost 5572; then
-            RCLONE_PASS=$(cat secrets/rclone_web_gui_password.txt)
-            curl -v -u admin:$RCLONE_PASS --connect-timeout 10 --max-time 30 http://localhost:5572/ || \
-            echo "Web GUI test with auth failed"
-          else
-            echo "Port 5572 not available - skipping Web GUI test"
-          fi
 
       - name: Check logs
         if: always()

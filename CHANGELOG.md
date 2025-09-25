@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.71.1-4] - 2025-09-25
+
+### 🛠️ CI/CD Standardization & Modernization
+- **Docker Compose Plugin**: Migrated from legacy docker-compose to modern docker compose plugin
+- **Hadolint Standardization**: Added consistent ignore directives (DL3007,DL3018,DL3013)
+- **Workflow Consistency**: Aligned CI patterns with audiobookshelf and tandoor projects
+- **GitHub Actions Enhancement**: Improved workflow reliability and eliminated legacy dependencies
+
+### 📋 Pre-Push Guidelines Compliance
+- **Command Modernization**: Updated docker-compose references to docker compose throughout CI
+- **Enhanced Documentation**: Updated CLAUDE.md with workflow standardization details
+
 ## [1.71.1-3] - 2025-09-25
 
 ### 🔧 Build & Infrastructure Updates

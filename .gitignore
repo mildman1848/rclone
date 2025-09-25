@@ -16,6 +16,7 @@ config/
 data/
 logs/
 security/
+!security/seccomp-profile.json
 security-reports/
 
 # Application-specific runtime directories
@@ -126,4 +127,3 @@ baseimage-test-*.log
 baseimage-test-*.json
 
 # Removed obsolete files
-# UPSTREAM_AUTOMATION_EVALUATION.md

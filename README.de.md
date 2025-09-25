@@ -648,8 +648,6 @@ Das Projekt beinhaltet automatische Überwachung von Upstream-Abhängigkeiten:
 
 **Überwachungszeiten**: Montag und Donnerstag um 6 Uhr UTC
 
-Siehe [UPSTREAM_AUTOMATION_EVALUATION.md](UPSTREAM_AUTOMATION_EVALUATION.md) für die detaillierte Implementierungsstrategie.
-
 ### 🔧 Setup-Anforderungen
 
 **Für GHCR (GitHub Container Registry) Unterstützung:**
