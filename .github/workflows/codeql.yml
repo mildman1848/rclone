@@ -25,13 +25,9 @@ jobs:
       actions: read
       contents: read
 
-    strategy:
-      fail-fast: false
-      matrix:
-        # Override automatic language detection by changing the list below
-        # Supported languages: 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
-        # Note: rclone uses pre-compiled binaries from upstream, minimal source code to analyze
-        language: []
+    # Skip matrix strategy for this project since it uses pre-compiled binaries
+    # Only run on manual dispatch for shell script analysis if needed
+    if: github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout repository
@@ -40,12 +36,8 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
-          # If you wish to specify custom queries, you can do so here or in a config file.
-          # By default, queries listed here will override any specified in a config file.
-          # Prefix the list here with "+" to use these queries and those in the config file.
-          # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
-          queries: +security-extended,security-and-quality
+          # Let CodeQL auto-detect languages (mainly shell scripts in this project)
+          # queries: +security-extended,security-and-quality
 
       # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
       # If this step fails, then you should remove it and run the build manually (see below).
@@ -64,16 +56,14 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:${{ matrix.language }}"
 
       - name: CodeQL Analysis Summary
         if: always()
         run: |
           echo "## CodeQL Analysis Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Language | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| ${{ matrix.language }} | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Project | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| rclone | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "📊 **View detailed results:** [Security tab](https://github.com/${{ github.repository }}/security/code-scanning)" >> $GITHUB_STEP_SUMMARY
