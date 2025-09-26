@@ -244,8 +244,8 @@ jobs:
       - name: Create test environment
         run: |
           mkdir -p config/{rclone,cache,logs}
-          mkdir -p data media backup logs
-          chmod 755 config data media backup logs
+          mkdir -p data/mnt media backup logs
+          chmod 755 config data media backup logs data/mnt
 
           cp .env.example .env
 
