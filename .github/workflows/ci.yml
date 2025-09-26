@@ -137,12 +137,7 @@ jobs:
           EOF
 
       - name: Generate test secrets
-        run: |
-          mkdir -p secrets
-          openssl rand -base64 32 | tr -d "=+/" | head -c 24 > secrets/rclone_config_pass.txt
-          openssl rand -base64 32 | tr -d "=+/" | head -c 20 > secrets/rclone_password.txt
-          openssl rand -base64 32 | tr -d "=+/" | head -c 20 > secrets/rclone_web_gui_password.txt
-          chmod 600 secrets/*.txt
+        run: make secrets-generate-ci
 
       - name: Test container startup
         run: |
@@ -266,12 +261,7 @@ jobs:
           EOF
 
       - name: Generate secrets
-        run: |
-          mkdir -p secrets
-          openssl rand -base64 32 | tr -d "=+/" | head -c 24 > secrets/rclone_config_pass.txt
-          openssl rand -base64 32 | tr -d "=+/" | head -c 20 > secrets/rclone_password.txt
-          openssl rand -base64 32 | tr -d "=+/" | head -c 20 > secrets/rclone_web_gui_password.txt
-          chmod 600 secrets/*.txt
+        run: make secrets-generate-ci
 
       - name: Build image first
         run: |

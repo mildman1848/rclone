@@ -24,7 +24,7 @@ YELLOW = \033[0;33m
 BLUE = \033[0;34m
 NC = \033[0m # No Color
 
-.PHONY: help build build-multiarch build-manifest build-manifest-push inspect-manifest validate-manifest push test clean lint validate security-scan secrets-generate secrets-rotate secrets-clean secrets-info env-setup env-validate setup
+.PHONY: help build build-multiarch build-manifest build-manifest-push inspect-manifest validate-manifest push test clean lint validate security-scan secrets-generate secrets-generate-ci secrets-rotate secrets-clean secrets-info env-setup env-validate setup
 
 # Default target
 all: help
@@ -410,6 +410,19 @@ secrets-generate: ## Generate secure secrets for rclone
 	@echo "$(YELLOW)⚠️  Keep these secrets secure and never commit them to version control!$(NC)"
 	@echo "$(BLUE)Generated rclone secrets:$(NC)"
 	@ls -la secrets/rclone_*.txt | awk '{print "  " $$9 " (" $$5 " bytes)"}'
+
+secrets-generate-ci: ## Generate standardized secrets for CI workflows (GitHub Actions)
+	@echo "$(GREEN)Generating CI-standardized secrets for GitHub Actions workflows...$(NC)"
+	@mkdir -p secrets
+	@echo "Generating comprehensive secret set for CI testing..."
+	@openssl rand -base64 32 | tr -d "=+/" | head -c 24 > secrets/rclone_config_pass.txt
+	@openssl rand -base64 32 | tr -d "=+/" | head -c 20 > secrets/rclone_password.txt
+	@openssl rand -base64 32 | tr -d "=+/" | head -c 20 > secrets/rclone_web_gui_password.txt
+	@chmod 600 secrets/*.txt 2>/dev/null || true
+	@echo "$(GREEN)✓ CI secrets generated successfully!$(NC)"
+	@echo "$(BLUE)CI Secret Files Created:$(NC)"
+	@ls -la secrets/ 2>/dev/null | grep -E "(config_pass|password|web_gui)" | awk '{print "  " $$9 ": " $$5 " bytes"}' || echo "  All secrets generated"
+	@echo "$(YELLOW)ℹ️  These secrets match CI workflow generation patterns exactly$(NC)"
 
 secrets-rotate: ## Rotate existing secrets (keeps backups)
 	@echo "$(GREEN)Rotating secrets...$(NC)"
