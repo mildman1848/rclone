@@ -36,8 +36,9 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          # Let CodeQL auto-detect languages (mainly shell scripts in this project)
-          # queries: +security-extended,security-and-quality
+          languages: javascript
+          # Analyze JavaScript/shell scripts for this containerized binary project
+          queries: +security-extended,security-and-quality
 
       # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
       # If this step fails, then you should remove it and run the build manually (see below).
@@ -56,6 +57,8 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript"
 
       - name: CodeQL Analysis Summary
         if: always()
