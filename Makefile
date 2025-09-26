@@ -234,7 +234,7 @@ test: ## Test the Docker image
 	@echo "Stopping test container..."
 	@$(DOCKER) stop rclone-test
 	@echo "Cleaning up test directories..."
-	@rm -rf /tmp/rclone-test-*
+	@sudo rm -rf /tmp/rclone-test-* 2>/dev/null || rm -rf /tmp/rclone-test-* 2>/dev/null || true
 	@echo "$(GREEN)All tests passed!$(NC)"
 
 ## Security and validation targets
