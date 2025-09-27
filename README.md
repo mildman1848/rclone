@@ -7,7 +7,7 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/mildman1848/rclone)
 ![Docker Image Size](https://img.shields.io/docker/image-size/mildman1848/rclone/latest)
 ![License](https://img.shields.io/github/license/mildman1848/rclone)
-![Version](https://img.shields.io/badge/version-1.71.0-blue)
+![Version](https://img.shields.io/badge/version-1.71.1-blue)
 
 🐳 **[Docker Hub: mildman1848/rclone](https://hub.docker.com/r/mildman1848/rclone)**
 
@@ -133,7 +133,7 @@ docker build -t mildman1848/rclone:latest .
 
 # With specific arguments
 docker build \
-  --build-arg RCLONE_VERSION=v1.71.0 \
+  --build-arg RCLONE_VERSION=v1.71.1 \
   --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
   -t mildman1848/rclone:latest .
 ```
@@ -380,7 +380,7 @@ make secrets-generate
 make env-validate
 
 # 6. Use specific image tags
-docker run mildman1848/rclone:v1.71.0  # instead of :latest
+docker run mildman1848/rclone:v1.71.1  # instead of :latest
 
 # 7. Monitor container health
 make status  # Container status and health checks

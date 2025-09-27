@@ -6,7 +6,7 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/mildman1848/rclone)
 ![Docker Image Size](https://img.shields.io/docker/image-size/mildman1848/rclone/latest)
 ![License](https://img.shields.io/github/license/mildman1848/rclone)
-![Version](https://img.shields.io/badge/version-1.71.0-blue)
+![Version](https://img.shields.io/badge/version-1.71.1-blue)
 
 🐳 **[Docker Hub: mildman1848/rclone](https://hub.docker.com/r/mildman1848/rclone)**
 
@@ -132,7 +132,7 @@ docker build -t mildman1848/rclone:latest .
 
 # Mit spezifischen Argumenten
 docker build \
-  --build-arg RCLONE_VERSION=v1.71.0 \
+  --build-arg RCLONE_VERSION=v1.71.1 \
   --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
   -t mildman1848/rclone:latest .
 ```
@@ -369,7 +369,7 @@ make secrets-generate
 make env-validate
 
 # 6. Spezifische Image-Tags verwenden
-docker run mildman1848/rclone:v1.71.0  # statt :latest
+docker run mildman1848/rclone:v1.71.1  # statt :latest
 
 # 7. Container Health überwachen
 make status  # Container Status und Health Checks
