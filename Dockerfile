@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Build stage for rclone
-FROM rclone/rclone:1.71.1 AS rclone
+FROM rclone/rclone:1.73.0 AS rclone
 
 # Production stage with LinuxServer.io Alpine baseimage
 FROM ghcr.io/linuxserver/baseimage-alpine:3.22-a0dc0735-ls11
