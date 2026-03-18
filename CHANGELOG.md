@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Updated the upstream `rclone/rclone` source image from `1.71.1` to `1.73.2`.
+- Updated the LinuxServer.io Alpine base image to the current `3.23` release line.
+- Refreshed the ARM64 Dockerfile to match the current base image generation.
+
 ## [1.71.1-4] - 2025-09-25
 
 ### 🛠️ CI/CD Standardization & Modernization

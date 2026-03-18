@@ -1,15 +1,15 @@
 # syntax=docker/dockerfile:1
 
 # Build stage for rclone
-FROM rclone/rclone:1.71.1 AS rclone
+FROM rclone/rclone:1.73.2 AS rclone
 
 # Production stage with LinuxServer.io Alpine baseimage
-FROM ghcr.io/linuxserver/baseimage-alpine:3.22-a0dc0735-ls11
+FROM ghcr.io/linuxserver/baseimage-alpine:3.23-48fea208-ls9
 
 # Build arguments for metadata
 ARG BUILD_DATE
 ARG VERSION
-ARG RCLONE_VERSION="1.71.1"
+ARG RCLONE_VERSION="1.73.2"
 
 # Metadata labels following LinuxServer.io standards
 LABEL build.version="Mildman1848 version: ${VERSION} Build-date: ${BUILD_DATE}"
