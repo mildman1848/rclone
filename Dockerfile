@@ -37,10 +37,10 @@ ENV RCLONE_CONFIG="/config/rclone/rclone.conf" \
 RUN \
   echo "**** install runtime packages ****" && \
   apk add --no-cache \
-    ca-certificates=20250619-r0 \
-    curl=8.14.1-r1 \
-    fuse3=3.16.2-r1 \
-    unzip=6.0-r15 && \
+    ca-certificates \
+    curl \
+    fuse3 \
+    unzip && \
   echo "**** install rclone ****" && \
   mkdir -p /app && \
   echo "**** cleanup ****" && \
