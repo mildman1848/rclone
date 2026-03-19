@@ -6,7 +6,7 @@ DOCKER_REPO = mildman1848/rclone
 VERSION ?= latest
 BUILD_DATE := $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 VCS_REF := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-RCLONE_VERSION ?= 1.71.1
+RCLONE_VERSION ?= 1.73.2
 UPSTREAM_REPO = rclone/rclone
 
 # Platform support for multi-architecture builds
