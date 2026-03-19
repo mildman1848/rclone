@@ -34,6 +34,7 @@ ENV RCLONE_CONFIG="/config/rclone/rclone.conf" \
     RCLONE_APP_VERSION="${RCLONE_VERSION}"
 
 # Install dependencies and rclone
+# hadolint ignore=DL3018
 RUN \
   echo "**** install runtime packages ****" && \
   apk add --no-cache \
