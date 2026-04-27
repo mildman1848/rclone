@@ -203,7 +203,7 @@ jobs:
           cache-from: type=gha
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/rclone:scan'
           format: 'sarif'
@@ -216,7 +216,7 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
       - name: Run Trivy for detailed output
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/rclone:scan'
           format: 'table'
