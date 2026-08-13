@@ -65,7 +65,7 @@ EXPOSE 5572
 
 # Health check for rclone (test process)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD ps aux | grep -v grep | grep rclone || exit 1
+  CMD ["sh", "-c", "ps aux | grep -v grep | grep rclone || exit 1"]
 
 # Volumes for persistent data
 VOLUME ["/config", "/data"]
