@@ -73,7 +73,7 @@ EXPOSE 5572
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=5 \
-    CMD ps aux | grep rclone | grep -v grep || exit 1
+    CMD ["sh", "-c", "ps aux | grep rclone | grep -v grep || exit 1"]
 
 # Set working directory
 WORKDIR /app
