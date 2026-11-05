@@ -16,8 +16,8 @@ jobs:
     steps:
     - uses: actions/first-interaction@v3
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-message: |
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        issue_message: |
           Thanks for opening your first issue here! Be sure to follow the relevant issue templates, or risk having this issue marked as invalid.
-        pr-message: |
+        pr_message: |
           Thanks for opening this pull request! Please check out our contributing guidelines and ensure your PR follows the template. We'll review it as soon as possible.
